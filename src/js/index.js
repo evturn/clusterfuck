@@ -7,9 +7,10 @@ document.body.appendChild(canvas);
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-
 const SPEED = 40;
 const STAR_NUMBER = 250;
+const COLOR_DARK = '#000000';
+const COLOR_LIGHT = '#ffffff';
 
 const StarStream = Rx.Observable
   .range(1, STAR_NUMBER)
@@ -35,3 +36,10 @@ const StarStream = Rx.Observable
         return starArray;
       });
   });
+
+function paintStars(stars) {
+  ctx.fillStyle = COLOR_DARK;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = COLOR_LIGHT;
+  stars.forEach(star => ctx.fillRect(star.x, star.y, star.size, star.size));
+}
