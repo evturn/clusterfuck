@@ -35,7 +35,10 @@ const StarStream = Rx.Observable
 
         return starArray;
       });
-  });
+  })
+  .subscribe(
+    starArray => paintStars(starArray)
+  );
 
 function paintStars(stars) {
   ctx.fillStyle = COLOR_DARK;

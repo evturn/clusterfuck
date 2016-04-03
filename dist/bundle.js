@@ -12,6 +12,8 @@
 
   var SPEED = 40;
   var STAR_NUMBER = 250;
+  var COLOR_DARK = '#000000';
+  var COLOR_LIGHT = '#ffffff';
 
   var StarStream = Rx.Observable.range(1, STAR_NUMBER).map(function () {
     return {
@@ -31,6 +33,17 @@
 
       return starArray;
     });
+  }).subscribe(function (starArray) {
+    return paintStars(starArray);
   });
+
+  function paintStars(stars) {
+    ctx.fillStyle = COLOR_DARK;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = COLOR_LIGHT;
+    stars.forEach(function (star) {
+      return ctx.fillRect(star.x, star.y, star.size, star.size);
+    });
+  }
 
 }());
