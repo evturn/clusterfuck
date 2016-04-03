@@ -1,7 +1,6 @@
+import { STAR_NUMBER, SPEED, COLOR_DARK, COLOR_LIGHT } from './constants';
 import { canvas, ctx } from './canvas';
-import {
-  STAR_NUMBER, SPEED,
-  COLOR_DARK, COLOR_LIGHT } from './constants';
+import SpaceShip from './player';
 
 
 const StarStream = Rx.Observable
@@ -27,10 +26,7 @@ const StarStream = Rx.Observable
 
         return starArray;
       });
-  })
-  .subscribe(
-    starArray => paintStars(starArray)
-  );
+  });
 
 function paintStars(stars) {
   ctx.fillStyle = COLOR_DARK;
@@ -38,3 +34,31 @@ function paintStars(stars) {
   ctx.fillStyle = COLOR_LIGHT;
   stars.forEach(star => ctx.fillRect(star.x, star.y, star.size, star.size));
 }
+
+function drawTriangle(x, y, width, color, direction) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x - width, y);
+  ctx.lineTo(x, direction === 'up' ? y - width : y + width);
+  ctx.lineTo(x + width, y);
+  ctx.lineTo(x - width, y);
+  ctx.fill();
+}
+
+function paintSpaceShip(x, y) {
+  drawTriangle(x, y, 20, '#ff0000', 'up');
+}
+
+function renderScene(actors) {
+  paintStars(actors.stars);
+  paintSpaceShip(actors.spaceship.x, actors.spaceship.y);
+}
+
+const Game = Rx.Observable
+  .combineLatest(
+    StarStream,
+    SpaceShip,
+    (stars, spaceship) => ({ stars, spaceship })
+  );
+
+Game.subscribe(renderScene);

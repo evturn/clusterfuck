@@ -13,3 +13,5 @@ const SpaceShip = mouseMove
     x: canvas.width / 2,
     y: PLAYER_Y
   });
+
+export default SpaceShip;
