@@ -1,0 +1,35 @@
+{
+  "name": "clusterfuck",
+  "version": "1.0.0",
+  "description": "Galaga 2",
+  "main": "index.js",
+  "scripts": {
+    "dev": "rollup -c"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evturn/clusterfuck.git"
+  },
+  "keywords": [
+    "galaga",
+    "galaga",
+    "2",
+    "clusterfuck",
+    "RxJS"
+  ],
+  "author": "Evan Turner <ev@evturn.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/evturn/clusterfuck/issues"
+  },
+  "homepage": "https://github.com/evturn/clusterfuck#readme",
+  "devDependencies": {
+    "babel": "^6.5.2",
+    "babel-core": "^6.7.4",
+    "babel-plugin-transform-runtime": "^6.6.0",
+    "babel-preset-es2015-rollup": "^1.1.1",
+    "babel-runtime": "^6.6.1",
+    "rollup": "^0.25.7",
+    "rollup-plugin-babel": "^2.4.0"
+  }
+}
