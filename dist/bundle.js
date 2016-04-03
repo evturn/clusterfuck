@@ -1,8 +1,6 @@
 (function () {
   'use strict';
 
-  console.log('sup with them cookies?');
-
   var canvas = document.createElement('canvas');
   var ctx = canvas.getContext('2d');
 

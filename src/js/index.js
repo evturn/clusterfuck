@@ -1,16 +1,8 @@
-console.log('sup with them cookies?');
+import { canvas, ctx } from './canvas';
+import {
+  STAR_NUMBER, SPEED,
+  COLOR_DARK, COLOR_LIGHT } from './constants';
 
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
-
-document.body.appendChild(canvas);
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-const SPEED = 40;
-const STAR_NUMBER = 250;
-const COLOR_DARK = '#000000';
-const COLOR_LIGHT = '#ffffff';
 
 const StarStream = Rx.Observable
   .range(1, STAR_NUMBER)
