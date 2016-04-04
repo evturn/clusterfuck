@@ -21,19 +21,27 @@ function drawTriangle(x, y, width, color, direction) {
   ctx.fill();
 }
 
-function paintSpaceShip(x, y) {
-  drawTriangle(x, y, 20, '#ff0000', 'up');
-}
-
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function collision(target1, target2) {
+  return (target1.x > target2.x - 20 && target1.x < target2.x + 20) && (target1.y > target2.y - 20 && target1.y < target2.y + 20);
+}
+
+function paintSpaceShip(x, y) {
+  drawTriangle(x, y, 20, '#ff0000', 'up');
 }
 
 function paintEnemies(enemies) {
   enemies.forEach(enemy => {
     enemy.y += 5;
     enemy.x += getRandomInt(-15, 15);
-    drawTriangle(enemy.x, enemy.y, 20, '#00ff00', 'down');
+
+    if (!enemy.isDead) {
+      drawTriangle(enemy.x, enemy.y, 20, '#00ff00', 'down');
+    }
+
     enemy.shots.forEach(shot => {
       shot.y += SHOOTING_SPEED;
       drawTriangle(shot.x, shot.y, 5, '#00ffff', 'down');
@@ -41,8 +49,19 @@ function paintEnemies(enemies) {
   });
 }
 
-function paintPlayerShots(playerShots) {
-  playerShots.forEach(shot => {
+function paintPlayerShots(playerShots, enemies) {
+  playerShots.forEach((shot, i) => {
+
+    for (var l = 0; l < enemies.length; l++) {
+      var enemy = enemies[l];
+
+      if (!enemy.isDead && collision(shot, enemy)) {
+        enemy.isDead = true;
+        shot.x = shot.y = -100;
+        break;
+      }
+    }
+
     shot.y -= SHOOTING_SPEED;
     drawTriangle(shot.x, shot.y, 5, '#ffff00', 'up');
   });
