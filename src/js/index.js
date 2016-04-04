@@ -1,7 +1,7 @@
 import { SPEED, COLOR_DARK, COLOR_LIGHT, SHOOTING_SPEED } from './constants';
 import { canvas, ctx } from './canvas';
 import StarStream from './star-stream';
-import { SpaceShip, playerFiring } from './player';
+import { SpaceShip, PlayerShots } from './player';
 import Opponents from './opponents';
 
 function paintStars(stars) {
@@ -48,6 +48,7 @@ function renderScene(actors) {
   paintStars(actors.stars);
   paintSpaceShip(actors.spaceship.x, actors.spaceship.y);
   paintEnemies(actors.opponents);
+  paintPlayerShots(actors.playerShots);
 }
 
 Rx.Observable
@@ -55,7 +56,10 @@ Rx.Observable
     StarStream,
     SpaceShip,
     Opponents,
-    (stars, spaceship, opponents) => ({ stars, spaceship, opponents })
+    PlayerShots,
+    (stars, spaceship, opponents, playerShots) => ({
+      stars, spaceship, opponents, playerShots
+    })
   )
   .sample(SPEED)
   .subscribe(renderScene);

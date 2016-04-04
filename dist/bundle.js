@@ -5,6 +5,7 @@
   var STAR_NUMBER = 250;
   var COLOR_DARK = '#000000';
   var COLOR_LIGHT = '#ffffff';
+  var SHOOTING_SPEED = 15;
 
   var canvas = document.createElement('canvas');
   var ctx = canvas.getContext('2d');
@@ -45,6 +46,21 @@
     x: canvas.width / 2,
     y: PLAYER_Y
   });
+
+  var playerFiring = Rx.Observable.merge(Rx.Observable.fromEvent(canvas, 'click'), Rx.Observable.fromEvent(canvas, 'keydown').filter(function (e) {
+    return e.keycode === 32;
+  })).sample(200).timestamp();
+
+  var PlayerShots = Rx.Observable.combineLatest(playerFiring, SpaceShip, function (shotEvents, spaceShip) {
+    return { x: spaceShip.x };
+  }).scan(function (shotArray, shot) {
+    shotArray.push({
+      x: shot.x,
+      y: PLAYER_Y
+    });
+
+    return shotArray;
+  }, []);
 
   var ENEMY_FREQ = 1500;
 
@@ -94,14 +110,24 @@
     });
   }
 
+  function paintPlayerShots(playerShots) {
+    playerShots.forEach(function (shot) {
+      shot.y -= SHOOTING_SPEED;
+      drawTriangle(shot.x, shot.y, 5, '#ffff00', 'up');
+    });
+  }
+
   function renderScene(actors) {
     paintStars(actors.stars);
     paintSpaceShip(actors.spaceship.x, actors.spaceship.y);
     paintEnemies(actors.opponents);
+    paintPlayerShots(actors.playerShots);
   }
 
-  Rx.Observable.combineLatest(StarStream, SpaceShip, Opponents, function (stars, spaceship, opponents) {
-    return { stars: stars, spaceship: spaceship, opponents: opponents };
+  Rx.Observable.combineLatest(StarStream, SpaceShip, Opponents, PlayerShots, function (stars, spaceship, opponents, playerShots) {
+    return {
+      stars: stars, spaceship: spaceship, opponents: opponents, playerShots: playerShots
+    };
   }).sample(SPEED).subscribe(renderScene);
 
 }());

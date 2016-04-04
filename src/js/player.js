@@ -14,7 +14,7 @@ export const SpaceShip = mouseMove
     y: PLAYER_Y
   });
 
-export const playerFiring = Rx.Observable
+const playerFiring = Rx.Observable
   .merge(
     Rx.Observable.fromEvent(canvas, 'click'),
     Rx.Observable.fromEvent(canvas, 'keydown')
