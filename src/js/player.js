@@ -3,7 +3,7 @@ import { canvas } from './canvas';
 const PLAYER_Y = canvas.height - 30;
 const mouseMove = Rx.Observable.fromEvent(canvas, 'mousemove');
 
-const SpaceShip = mouseMove
+export const SpaceShip = mouseMove
   .map(e => ({
       x: e.clientX,
       y: PLAYER_Y
@@ -14,4 +14,26 @@ const SpaceShip = mouseMove
     y: PLAYER_Y
   });
 
-export default SpaceShip;
+export const playerFiring = Rx.Observable
+  .merge(
+    Rx.Observable.fromEvent(canvas, 'click'),
+    Rx.Observable.fromEvent(canvas, 'keydown')
+      .filter(e => e.keycode === 32)
+  )
+  .sample(200)
+  .timestamp();
+
+export const PlayerShots = Rx.Observable
+  .combineLatest(
+    playerFiring,
+    SpaceShip,
+    (shotEvents, spaceShip) => ({ x: spaceShip.x })
+  )
+  .scan((shotArray, shot) => {
+    shotArray.push({
+      x: shot.x,
+      y: PLAYER_Y
+    });
+
+    return shotArray;
+  }, []);

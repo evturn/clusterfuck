@@ -1,7 +1,7 @@
 import { SPEED, COLOR_DARK, COLOR_LIGHT } from './constants';
 import { canvas, ctx } from './canvas';
 import StarStream from './star-stream';
-import SpaceShip from './player';
+import { SpaceShip, playerFiring } from './player';
 import Opponents from './opponents';
 
 function paintStars(stars) {
