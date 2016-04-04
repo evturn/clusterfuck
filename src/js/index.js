@@ -67,6 +67,16 @@ function paintPlayerShots(playerShots, enemies) {
   });
 }
 
+function gameOver(ship, enemies) {
+  return enemies.some(enemy => {
+    if (collision(ship, enemy)) {
+      return true;
+    }
+
+    return enemy.shots.some(shot => collision(ship, shot));
+  })
+}
+
 function renderScene(actors) {
   paintStars(actors.stars);
   paintSpaceShip(actors.spaceship.x, actors.spaceship.y);
