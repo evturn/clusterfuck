@@ -11,6 +11,12 @@ function paintStars(stars) {
   stars.forEach(star => ctx.fillRect(star.x, star.y, star.size, star.size));
 }
 
+function paintScore(score) {
+  ctx.fillStyle = COLOR_LIGHT;
+  ctx.font = 'bold 26px sans-serif';
+  ctx.fillText('Score: ' + score, 40, 43);
+}
+
 function drawTriangle(x, y, width, color, direction) {
   ctx.fillStyle = color;
   ctx.beginPath();
