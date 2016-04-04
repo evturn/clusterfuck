@@ -52,7 +52,12 @@
   })).sample(200).timestamp();
 
   var PlayerShots = Rx.Observable.combineLatest(playerFiring, SpaceShip, function (shotEvents, spaceShip) {
-    return { x: spaceShip.x };
+    return {
+      timestamp: shotEvents.timestamp,
+      x: spaceShip.x
+    };
+  }).distinctUntilChanged(function (shot) {
+    return shot.timestamp;
   }).scan(function (shotArray, shot) {
     shotArray.push({
       x: shot.x,

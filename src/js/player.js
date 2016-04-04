@@ -27,8 +27,12 @@ export const PlayerShots = Rx.Observable
   .combineLatest(
     playerFiring,
     SpaceShip,
-    (shotEvents, spaceShip) => ({ x: spaceShip.x })
+    (shotEvents, spaceShip) => ({
+      timestamp: shotEvents.timestamp,
+      x: spaceShip.x
+    })
   )
+  .distinctUntilChanged(shot => shot.timestamp)
   .scan((shotArray, shot) => {
     shotArray.push({
       x: shot.x,
