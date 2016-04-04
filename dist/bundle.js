@@ -100,10 +100,8 @@
     paintEnemies(actors.opponents);
   }
 
-  var Game = Rx.Observable.combineLatest(StarStream, SpaceShip, Opponents, function (stars, spaceship, opponents) {
+  Rx.Observable.combineLatest(StarStream, SpaceShip, Opponents, function (stars, spaceship, opponents) {
     return { stars: stars, spaceship: spaceship, opponents: opponents };
-  });
-
-  Game.subscribe(renderScene);
+  }).sample(SPEED).subscribe(renderScene);
 
 }());

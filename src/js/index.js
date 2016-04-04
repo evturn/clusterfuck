@@ -1,4 +1,4 @@
-import { COLOR_DARK, COLOR_LIGHT } from './constants';
+import { SPEED, COLOR_DARK, COLOR_LIGHT } from './constants';
 import { canvas, ctx } from './canvas';
 import StarStream from './star-stream';
 import SpaceShip from './player';
@@ -43,12 +43,12 @@ function renderScene(actors) {
   paintEnemies(actors.opponents);
 }
 
-const Game = Rx.Observable
+Rx.Observable
   .combineLatest(
     StarStream,
     SpaceShip,
     Opponents,
     (stars, spaceship, opponents) => ({ stars, spaceship, opponents })
-  );
-
-Game.subscribe(renderScene);
+  )
+  .sample(SPEED)
+  .subscribe(renderScene);
