@@ -74,7 +74,7 @@ function gameOver(ship, enemies) {
     }
 
     return enemy.shots.some(shot => collision(ship, shot));
-  })
+  });
 }
 
 function renderScene(actors) {
@@ -94,5 +94,6 @@ Rx.Observable
       stars, spaceship, opponents, playerShots
     })
   )
+  .takeWhile(actors => (gameOver(actors.spaceship, actors.opponents)) === false)
   .sample(SPEED)
   .subscribe(renderScene);

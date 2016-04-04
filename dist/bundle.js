@@ -164,6 +164,18 @@
     });
   }
 
+  function gameOver(ship, enemies) {
+    return enemies.some(function (enemy) {
+      if (collision(ship, enemy)) {
+        return true;
+      }
+
+      return enemy.shots.some(function (shot) {
+        return collision(ship, shot);
+      });
+    });
+  }
+
   function renderScene(actors) {
     paintStars(actors.stars);
     paintSpaceShip(actors.spaceship.x, actors.spaceship.y);
@@ -175,6 +187,8 @@
     return {
       stars: stars, spaceship: spaceship, opponents: opponents, playerShots: playerShots
     };
+  }).takeWhile(function (actors) {
+    return gameOver(actors.spaceship, actors.opponents) === false;
   }).sample(SPEED).subscribe(renderScene);
 
 }());
