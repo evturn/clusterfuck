@@ -85,6 +85,19 @@
   function renderScene(actors) {
     paintStars(actors.stars);
     paintSpaceShip(actors.spaceship.x, actors.spaceship.y);
+    paintEnemies(actors.opponents);
+  }
+
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function paintEnemies(enemies) {
+    enemies.forEach(function (enemy) {
+      enemy.y += 5;
+      enemy.x += getRandomInt(-15, 15);
+      drawTriangle(enemy.x, enemy.y, 20, '#00ff00', 'down');
+    });
   }
 
   var Game = Rx.Observable.combineLatest(StarStream, SpaceShip, Opponents, function (stars, spaceship, opponents) {
