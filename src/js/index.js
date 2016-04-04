@@ -1,32 +1,8 @@
-import { STAR_NUMBER, SPEED, COLOR_DARK, COLOR_LIGHT } from './constants';
+import { COLOR_DARK, COLOR_LIGHT } from './constants';
 import { canvas, ctx } from './canvas';
+import StarStream from './star-stream';
 import SpaceShip from './player';
-
-
-const StarStream = Rx.Observable
-  .range(1, STAR_NUMBER)
-  .map(() => ({
-      x: parseInt(Math.random() * canvas.width),
-      y: parseInt(Math.random() * canvas.height),
-      size: Math.random() * 3 + 1
-    })
-  )
-  .toArray()
-  .flatMap(starArray => {
-    return Rx.Observable
-      .interval(SPEED)
-      .map(() => {
-        starArray.forEach(star => {
-          if (star.y >= canvas.height) {
-            star.y = 0;
-          }
-
-          star.y += 3;
-        });
-
-        return starArray;
-      });
-  });
+import Opponents from './opponents';
 
 function paintStars(stars) {
   ctx.fillStyle = COLOR_DARK;
@@ -58,7 +34,8 @@ const Game = Rx.Observable
   .combineLatest(
     StarStream,
     SpaceShip,
-    (stars, spaceship) => ({ stars, spaceship })
+    Opponents,
+    (stars, spaceship, opponents) => ({ stars, spaceship, opponents })
   );
 
 Game.subscribe(renderScene);

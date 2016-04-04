@@ -13,19 +13,6 @@
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  var PLAYER_Y = canvas.height - 30;
-  var mouseMove = Rx.Observable.fromEvent(canvas, 'mousemove');
-
-  var SpaceShip = mouseMove.map(function (e) {
-    return {
-      x: e.clientX,
-      y: PLAYER_Y
-    };
-  }).startWith({
-    x: canvas.width / 2,
-    y: PLAYER_Y
-  });
-
   var StarStream = Rx.Observable.range(1, STAR_NUMBER).map(function () {
     return {
       x: parseInt(Math.random() * canvas.width),
@@ -45,6 +32,32 @@
       return starArray;
     });
   });
+
+  var PLAYER_Y = canvas.height - 30;
+  var mouseMove = Rx.Observable.fromEvent(canvas, 'mousemove');
+
+  var SpaceShip = mouseMove.map(function (e) {
+    return {
+      x: e.clientX,
+      y: PLAYER_Y
+    };
+  }).startWith({
+    x: canvas.width / 2,
+    y: PLAYER_Y
+  });
+
+  var ENEMY_FREQ = 1500;
+
+  var Opponents = Rx.Observable.interval(ENEMY_FREQ).scan(function (enemyArray) {
+    var enemy = {
+      x: parseInt(Math.random() * canvas.width),
+      y: -30
+    };
+
+    enemyArray.push(enemy);
+
+    return enemyArray;
+  }, []);
 
   function paintStars(stars) {
     ctx.fillStyle = COLOR_DARK;
@@ -74,8 +87,8 @@
     paintSpaceShip(actors.spaceship.x, actors.spaceship.y);
   }
 
-  var Game = Rx.Observable.combineLatest(StarStream, SpaceShip, function (stars, spaceship) {
-    return { stars: stars, spaceship: spaceship };
+  var Game = Rx.Observable.combineLatest(StarStream, SpaceShip, Opponents, function (stars, spaceship, opponents) {
+    return { stars: stars, spaceship: spaceship, opponents: opponents };
   });
 
   Game.subscribe(renderScene);
