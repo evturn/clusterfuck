@@ -17,17 +17,21 @@ const Opponents = Rx.Observable
     Rx.Observable
       .interval(ENEMY_SHOOTING_FREQ)
       .subscribe(() => {
-        enemy.shots.push({
-          x: enemy.x,
-          y: enemy.y
-        });
+        if (!enemy.isDead) {
+          enemy.shots.push({
+            x: enemy.x,
+            y: enemy.y
+          });
+        }
 
         enemy.shots = enemy.shots.filter(isVisible);
       });
 
     enemyArray.push(enemy);
 
-    return enemyArray.filter(isVisible);
+    return enemyArray
+      .filter(isVisible)
+      .filter(enemy => !(enemy.isDead && enemy.shots.length === 0));
   }, []);
 
 export default Opponents;

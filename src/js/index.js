@@ -71,7 +71,7 @@ function renderScene(actors) {
   paintStars(actors.stars);
   paintSpaceShip(actors.spaceship.x, actors.spaceship.y);
   paintEnemies(actors.opponents);
-  paintPlayerShots(actors.playerShots);
+  paintPlayerShots(actors.playerShots, actors.opponents);
 }
 
 Rx.Observable
