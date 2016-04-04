@@ -25,22 +25,22 @@ function paintSpaceShip(x, y) {
   drawTriangle(x, y, 20, '#ff0000', 'up');
 }
 
-function renderScene(actors) {
-  paintStars(actors.stars);
-  paintSpaceShip(actors.spaceship.x, actors.spaceship.y);
-  paintEnemies(actors.opponents);
-}
-
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function paintEnemies(enemies) {
-  enemies.forEach(function(enemy) {
+  enemies.forEach(enemy => {
     enemy.y += 5;
     enemy.x += getRandomInt(-15, 15);
     drawTriangle(enemy.x, enemy.y, 20, '#00ff00', 'down');
   });
+}
+
+function renderScene(actors) {
+  paintStars(actors.stars);
+  paintSpaceShip(actors.spaceship.x, actors.spaceship.y);
+  paintEnemies(actors.opponents);
 }
 
 const Game = Rx.Observable
