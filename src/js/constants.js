@@ -6,3 +6,4 @@ export const SHOOTING_SPEED = 15;
 
 export const ENEMY_FREQ = 1500;
 export const ENEMY_SHOOTING_FREQ = 750;
+export const SCORE_INCREASE = 10;

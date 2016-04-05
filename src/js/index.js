@@ -1,8 +1,17 @@
-import { SPEED, COLOR_DARK, COLOR_LIGHT, SHOOTING_SPEED } from './constants';
+import { SPEED, COLOR_DARK, COLOR_LIGHT, SHOOTING_SPEED, SCORE_INCREASE } from './constants';
 import { canvas, ctx } from './canvas';
 import StarStream from './star-stream';
 import { SpaceShip, PlayerShots } from './player';
 import Opponents from './opponents';
+import { ScoreSubject, score } from './score';
+
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function collision(target1, target2) {
+  return (target1.x > target2.x - 20 && target1.x < target2.x + 20) && (target1.y > target2.y - 20 && target1.y < target2.y + 20);
+}
 
 function paintStars(stars) {
   ctx.fillStyle = COLOR_DARK;
@@ -25,14 +34,6 @@ function drawTriangle(x, y, width, color, direction) {
   ctx.lineTo(x + width, y);
   ctx.lineTo(x - width, y);
   ctx.fill();
-}
-
-function getRandomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function collision(target1, target2) {
-  return (target1.x > target2.x - 20 && target1.x < target2.x + 20) && (target1.y > target2.y - 20 && target1.y < target2.y + 20);
 }
 
 function paintSpaceShip(x, y) {
@@ -62,6 +63,7 @@ function paintPlayerShots(playerShots, enemies) {
       var enemy = enemies[l];
 
       if (!enemy.isDead && collision(shot, enemy)) {
+        ScoreSubject.onNext(SCORE_INCREASE);
         enemy.isDead = true;
         shot.x = shot.y = -100;
         break;
@@ -88,6 +90,7 @@ function renderScene(actors) {
   paintSpaceShip(actors.spaceship.x, actors.spaceship.y);
   paintEnemies(actors.opponents);
   paintPlayerShots(actors.playerShots, actors.opponents);
+  paintScore(actors.score);
 }
 
 Rx.Observable
@@ -100,6 +103,6 @@ Rx.Observable
       stars, spaceship, opponents, playerShots
     })
   )
-  .takeWhile(actors => (gameOver(actors.spaceship, actors.opponents)) === false)
   .sample(SPEED)
+  .takeWhile(actors => (gameOver(actors.spaceship, actors.opponents)) === false)
   .subscribe(renderScene);

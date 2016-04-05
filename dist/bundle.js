@@ -9,6 +9,7 @@
 
   var ENEMY_FREQ = 1500;
   var ENEMY_SHOOTING_FREQ = 750;
+  var SCORE_INCREASE = 10;
 
   var canvas = document.createElement('canvas');
   var ctx = canvas.getContext('2d');
@@ -70,6 +71,11 @@
     return shotArray;
   }, []);
 
+  var ScoreSubject = new Rx.Subject();
+  var score = ScoreSubject.scan(function (prev, cur) {
+    return prev + cur;
+  }, 0).concat(Rx.Observable.return(0));
+
   function isVisible(obj) {
     return obj.x > -40 && obj.x < canvas.width + 40 && obj.y > -40 && obj.y < canvas.height + 40;
   }
@@ -99,6 +105,14 @@
     });
   }, []);
 
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function collision(target1, target2) {
+    return target1.x > target2.x - 20 && target1.x < target2.x + 20 && target1.y > target2.y - 20 && target1.y < target2.y + 20;
+  }
+
   function paintStars(stars) {
     ctx.fillStyle = COLOR_DARK;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -116,14 +130,6 @@
     ctx.lineTo(x + width, y);
     ctx.lineTo(x - width, y);
     ctx.fill();
-  }
-
-  function getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
-  function collision(target1, target2) {
-    return target1.x > target2.x - 20 && target1.x < target2.x + 20 && target1.y > target2.y - 20 && target1.y < target2.y + 20;
   }
 
   function paintSpaceShip(x, y) {
@@ -153,6 +159,7 @@
         var enemy = enemies[l];
 
         if (!enemy.isDead && collision(shot, enemy)) {
+          ScoreSubject.onNext(SCORE_INCREASE);
           enemy.isDead = true;
           shot.x = shot.y = -100;
           break;
@@ -162,6 +169,12 @@
       shot.y -= SHOOTING_SPEED;
       drawTriangle(shot.x, shot.y, 5, '#ffff00', 'up');
     });
+  }
+
+  function paintScore(score) {
+    ctx.fillStyle = COLOR_LIGHT;
+    ctx.font = 'bold 26px sans-serif';
+    ctx.fillText('Score: ' + score, 40, 43);
   }
 
   function gameOver(ship, enemies) {
@@ -181,14 +194,15 @@
     paintSpaceShip(actors.spaceship.x, actors.spaceship.y);
     paintEnemies(actors.opponents);
     paintPlayerShots(actors.playerShots, actors.opponents);
+    paintScore(actors.score);
   }
 
   Rx.Observable.combineLatest(StarStream, SpaceShip, Opponents, PlayerShots, function (stars, spaceship, opponents, playerShots) {
     return {
       stars: stars, spaceship: spaceship, opponents: opponents, playerShots: playerShots
     };
-  }).takeWhile(function (actors) {
+  }).sample(SPEED).takeWhile(function (actors) {
     return gameOver(actors.spaceship, actors.opponents) === false;
-  }).sample(SPEED).subscribe(renderScene);
+  }).subscribe(renderScene);
 
 }());
