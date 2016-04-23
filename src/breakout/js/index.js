@@ -1,9 +1,24 @@
 import Rx from 'rx'
 import { canvas, context } from './canvas'
 import {
-  PADDLE_WIDTH, PADDLE_HEIGHT, BALL_RADIUS,
-  BRICK_GAP, PADDLE_KEYS
+  PADDLE_WIDTH, PADDLE_HEIGHT, PADDLE_KEYS, PADDLE_SPEED,
+  BALL_RADIUS, BRICK_GAP, TICKER_INTERVAL
 } from './constants'
+
+const ticker$ = Rx.Observable
+  .interval(TICKER_INTERVAL, Rx.Scheduler.requestAnimationFrame)
+  .map(
+    () => ({
+      time: Date.now(),
+      deltaTime: null
+    })
+  )
+  .scan(
+    (previous, current) => ({
+      time: current.time,
+      deltaTime: (current.time - previous.time) / 1000
+    })
+  );
 
 const input$ = Rx.Observable
   .merge(
@@ -20,6 +35,17 @@ const input$ = Rx.Observable
     Rx.Observable.fromEvent(document, 'keyup', event => 0)
   )
 .distinctUntilChanged()
+
+const paddle$ = ticker$
+  .withLatestFrom(input$)
+  .scan((position, [ticker, direction]) => {
+
+    let next = position + direction * ticker.deltaTime * PADDLE_SPEED
+
+    return Math.max(Math.min(next, canvas.width - PADDLE_WIDTH / 2), PADDLE_WIDTH / 2)
+
+  }, canvas.width / 2)
+  .distinctUntilChanged()
 
 function drawTitle() {
   context.textAlign = 'center'
