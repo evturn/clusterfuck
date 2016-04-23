@@ -3,7 +3,7 @@ import Rx from 'rx'
 const audio = new (window.AudioContext || window.webkitAudioContext)()
 const beeper = new Rx.Subject()
 
-beeper.sample(100)
+export default beeper.sample(100)
   .subscribe(
     key => {
       let oscillator = audio.createOscillator()

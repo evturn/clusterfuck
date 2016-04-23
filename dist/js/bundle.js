@@ -12489,12 +12489,38 @@ var ReactiveTest = Rx.ReactiveTest = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _rx = require('rx');
+
+var _rx2 = _interopRequireDefault(_rx);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var audio = new (window.AudioContext || window.webkitAudioContext)();
+var beeper = new _rx2.default.Subject();
+
+exports.default = beeper.sample(100).subscribe(function (key) {
+  var oscillator = audio.createOscillator();
+
+  oscillator.connect(audio.destination);
+  oscillator.type = 'square';
+  oscillator.frequency.value = Math.pow(2, (key - 49) / 12) * 440;
+  oscillator.start();
+  oscillator.stop(audio.currentTime + 0.100);
+});
+
+},{"rx":2}],4:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 var canvas = exports.canvas = document.getElementById('stage');
 var context = exports.context = canvas.getContext('2d');
 
 context.fillStyle = 'pink';
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -12518,8 +12544,10 @@ var PADDLE_KEYS = exports.PADDLE_KEYS = {
 
 var TICKER_INTERVAL = exports.TICKER_INTERVAL = 17;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 var _rx = require('rx');
 
@@ -12527,9 +12555,25 @@ var _rx2 = _interopRequireDefault(_rx);
 
 var _canvas = require('./canvas');
 
+var _audio = require('./audio');
+
+var _audio2 = _interopRequireDefault(_audio);
+
 var _constants = require('./constants');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var ticker$ = _rx2.default.Observable.interval(_constants.TICKER_INTERVAL, _rx2.default.Scheduler.requestAnimationFrame).map(function () {
+  return {
+    time: Date.now(),
+    deltaTime: null
+  };
+}).scan(function (previous, current) {
+  return {
+    time: current.time,
+    deltaTime: (current.time - previous.time) / 1000
+  };
+});
 
 var input$ = _rx2.default.Observable.merge(_rx2.default.Observable.fromEvent(document, 'keydown', function (event) {
   switch (event.keyCode) {
@@ -12543,6 +12587,151 @@ var input$ = _rx2.default.Observable.merge(_rx2.default.Observable.fromEvent(doc
 }), _rx2.default.Observable.fromEvent(document, 'keyup', function (event) {
   return 0;
 })).distinctUntilChanged();
+
+var paddle$ = ticker$.withLatestFrom(input$).scan(function (position, _ref) {
+  var _ref2 = _slicedToArray(_ref, 2);
+
+  var ticker = _ref2[0];
+  var direction = _ref2[1];
+
+
+  var next = position + direction * ticker.deltaTime * _constants.PADDLE_SPEED;
+
+  return Math.max(Math.min(next, _canvas.canvas.width - _constants.PADDLE_WIDTH / 2), _constants.PADDLE_WIDTH / 2);
+}, _canvas.canvas.width / 2).distinctUntilChanged();
+
+var INITIAL_OBJECTS = {
+  ball: {
+    position: {
+      x: _canvas.canvas.width / 2,
+      y: _canvas.canvas.height / 2
+    },
+    direction: {
+      x: 2,
+      y: 2
+    }
+  },
+  bricks: factory(),
+  score: 0
+};
+
+var objects$ = ticker$.withLatestFrom(paddle$).scan(function (_ref3, _ref4) {
+  var ball = _ref3.ball;
+  var bricks = _ref3.bricks;
+  var collisions = _ref3.collisions;
+  var score = _ref3.score;
+
+  var _ref5 = _slicedToArray(_ref4, 2);
+
+  var ticker = _ref5[0];
+  var paddle = _ref5[1];
+
+
+  var survivors = [];
+  collisions = {
+    paddle: false,
+    floor: false,
+    wall: false,
+    ceiling: false,
+    brick: false
+  };
+
+  ball.position.x = ball.position.x + ball.direction.x * ticker.deltaTime * _constants.BALL_SPEED;
+  ball.position.y = ball.position.y + ball.direction.y * ticker.deltaTime * _constants.BALL_SPEED;
+
+  bricks.forEach(function (brick) {
+    if (!collision(brick, ball)) {
+      survivors.push(brick);
+    } else {
+      collisions.brick = true;
+      score = score + 10;
+    }
+  });
+
+  collisions.paddle = hit(paddle, ball);
+
+  if (ball.position.x < _constants.BALL_RADIUS || ball.position.x > _canvas.canvas.width - _constants.BALL_RADIUS) {
+    ball.direction.x = -ball.direction.x;
+    collisions.wall = true;
+  }
+
+  collisions.ceiling = ball.position.y < _constants.BALL_RADIUS;
+
+  if (collisions.brick || collisions.paddle || collisions.ceiling) {
+    ball.direction.y = -ball.direction.y;
+  }
+
+  return {
+    ball: ball,
+    bricks: survivors,
+    collisions: collisions,
+    score: score
+  };
+}, INITIAL_OBJECTS);
+
+drawTitle();
+drawControls();
+drawAuthor();
+
+var game = _rx2.default.Observable.combineLatest(ticker$, paddle$, objects$).sample(_constants.TICKER_INTERVAL).subscribe(update);
+
+function factory() {
+  var width = (_canvas.canvas.width - _constants.BRICK_GAP - _constants.BRICK_GAP * _constants.BRICK_COLUMNS) / _constants.BRICK_COLUMNS;
+  var bricks = [];
+
+  for (var i = 0; i < _constants.BRICK_ROWS; i++) {
+    for (var j = 0; j < _constants.BRICK_COLUMNS; j++) {
+      bricks.push({
+        x: j * (width + _constants.BRICK_GAP) + width / 2 + _constants.BRICK_GAP,
+        y: i * (_constants.BRICK_HEIGHT + _constants.BRICK_GAP) + _constants.BRICK_HEIGHT / 2 + _constants.BRICK_GAP + 20,
+        width: width,
+        height: _constants.BRICK_HEIGHT
+      });
+    }
+  }
+
+  return bricks;
+}
+
+function hit(paddle, ball) {
+  return ball.position.x > paddle - _constants.PADDLE_WIDTH / 2 && ball.position.x < paddle + _constants.PADDLE_WIDTH / 2 && ball.position.y > _canvas.canvas.height - _constants.PADDLE_HEIGHT - _constants.BALL_RADIUS / 2;
+}
+
+function collision(brick, ball) {
+  return ball.position.x + ball.direction.x > brick.x - brick.width / 2 && ball.position.x + ball.direction.x < brick.x + brick.width / 2 && ball.position.y + ball.direction.y > brick.y - brick.height / 2 && ball.position.y + ball.direction.y < brick.y + brick.height / 2;
+}
+
+function update(_ref6) {
+  var _ref7 = _slicedToArray(_ref6, 3);
+
+  var ticker = _ref7[0];
+  var paddle = _ref7[1];
+  var objects = _ref7[2];
+
+
+  _canvas.context.clearRect(0, 0, _canvas.canvas.width, _canvas.canvas.height);
+
+  drawPaddle(paddle);
+  drawBall(objects.ball);
+  drawBricks(objects.bricks);
+  drawScore(objects.score);
+
+  if (objects.ball.position.y > _canvas.canvas.height - _constants.BALL_RADIUS) {
+    _audio2.default.onNext(28);
+    drawGameOver('GAME OVER');
+    game.dispose();
+  }
+
+  if (!objects.bricks.length) {
+    _audio2.default.onNext(52);
+    drawGameOver('YOU HAVE WON BUT THAT WONT BRING GRANDMA BACK');
+    game.dispose();
+  }
+
+  if (objects.collisions.paddle) _audio2.default.onNext(40);
+  if (objects.collisions.wall || objects.collisions.ceiling) _audio2.default.onNext(45);
+  if (objects.collisions.brick) _audio2.default.onNext(47 + Math.floor(objects.ball.position.y % 12));
+}
 
 function drawTitle() {
   _canvas.context.textAlign = 'center';
@@ -12566,7 +12755,7 @@ function drawGameOver(text) {
 function drawAuthor() {
   _canvas.context.textAlign = 'center';
   _canvas.context.font = '16px Courier New';
-  _canvas.context.fillText('by Manuel Wieser', _canvas.canvas.width / 2, _canvas.canvas.height / 2 + 24);
+  _canvas.context.fillText('by Ivan Drago', _canvas.canvas.width / 2, _canvas.canvas.height / 2 + 24);
 }
 
 function drawScore(score) {
@@ -12602,4 +12791,4 @@ function drawBricks(bricks) {
   });
 }
 
-},{"./canvas":3,"./constants":4,"rx":2}]},{},[5]);
+},{"./audio":3,"./canvas":4,"./constants":5,"rx":2}]},{},[6]);
